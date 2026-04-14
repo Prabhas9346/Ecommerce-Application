@@ -103,6 +103,7 @@ public class DataLoader implements CommandLineRunner {
             productRepo.save(p);
         }
 
+
         System.out.println("✔ Initial Data Loaded Successfully");
     }
 }

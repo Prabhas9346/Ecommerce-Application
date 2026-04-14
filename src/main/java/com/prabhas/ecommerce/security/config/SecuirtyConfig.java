@@ -1,7 +1,10 @@
-package com.prabhas.ecommerce.config;
+package com.prabhas.ecommerce.security.config;
 
 
 
+import com.prabhas.ecommerce.security.filter.JWTFilter;
+import com.prabhas.ecommerce.security.service.CustomUserDetailsService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -12,26 +15,43 @@ import org.springframework.security.config.annotation.authentication.configurati
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
 @Configuration
 public class SecuirtyConfig {
 
     @Autowired
-    CustomUserDetailsService CustomUserDetailsService;
+    CustomUserDetailsService customUserDetailsService;
+
+    @Autowired
+    JWTFilter jwtFilter;
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http.csrf(Customizer -> Customizer.disable());
-        http.authorizeHttpRequests(request -> request.requestMatchers("/api/public/**").permitAll()
+
+        http.csrf(csrf -> csrf.disable());
+
+        http.authorizeHttpRequests(auth -> auth
+                .requestMatchers("/api/public/**").permitAll()
                 .requestMatchers("/api/auth/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/seller/**").hasRole("SELLER")
-                .requestMatchers("/api/auth/consumer/**").hasRole("CONSUMER").anyRequest().authenticated());
-        http.httpBasic(Customizer.withDefaults());
-        http.formLogin(Customizer -> Customizer.disable());
-        http.sessionManagement(Session -> Session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
-        
-        
+                .requestMatchers("/api/auth/consumer/**").hasRole("CONSUMER")
+                .anyRequest().authenticated()
+        );
 
+        http.authenticationProvider(authenticationProvider());
+
+        http.addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class);
+
+        http.sessionManagement(session ->
+                session.sessionCreationPolicy(SessionCreationPolicy.STATELESS)
+        );
+
+        http.formLogin(form -> form.disable());
+        http.httpBasic(basic -> basic.disable());
 
         return http.build();
     }
@@ -46,20 +66,19 @@ public class SecuirtyConfig {
     @Bean
     public AuthenticationProvider authenticationProvider() {
 
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
-        provider.setUserDetailsService( customUserDetailsService);
+
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
+
         provider.setPasswordEncoder( passwordEncoder());
         
         return provider;
         
     }
 
-
     @Bean
-     UserDetailsService customUserDetailsService() {
-        
-        return new CustomUserDetailsService();
-        
-         }
+     PasswordEncoder passwordEncoder() {
+        return new BCryptPasswordEncoder();
+    }
+
 
 }
