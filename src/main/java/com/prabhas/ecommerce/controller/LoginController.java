@@ -1,10 +1,11 @@
 package com.prabhas.ecommerce.controller;
 
-import com.prabhas.ecommerce.models.AuthenticationRequest;
-import com.prabhas.ecommerce.models.JWTResponse;
+import com.prabhas.ecommerce.beans.AuthenticationRequest;
+import com.prabhas.ecommerce.beans.JWTResponse;
+import com.prabhas.ecommerce.beans.RefreshRequest;
+import com.prabhas.ecommerce.repositories.RefreshTokenRepository;
 import com.prabhas.ecommerce.security.service.CustomUserDetailsService;
 import com.prabhas.ecommerce.security.service.JWTService;
-import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -27,6 +28,9 @@ public class LoginController {
     @Autowired
     JWTService jwtService;
 
+    @Autowired
+    private RefreshTokenRepository tokenRepository;
+
     @PostMapping("/api/public/login")
     public ResponseEntity<JWTResponse> login(@RequestBody AuthenticationRequest request) {
 
@@ -45,4 +49,39 @@ public class LoginController {
 
         return ResponseEntity.ok(jwtResponse);
     }
+
+    @PostMapping("api/public/logout")
+    public ResponseEntity<String> logout(@RequestBody RefreshRequest request) {
+
+        String refreshToken = request.getRefreshToken();
+
+        // delete or mark revoked
+        tokenRepository.deleteByToken(refreshToken);
+
+        return ResponseEntity.ok("Logged out successfully");
+    }
+
+    @PostMapping("api/public/refresh")
+    public ResponseEntity<JWTResponse> refresh(@RequestBody RefreshRequest request) {
+
+        String refreshToken = request.getRefreshToken();
+
+        // 1. Validate token
+        String username = jwtService.extractUsername(refreshToken);
+
+        if (!jwtService.isValidRefreshToken(refreshToken)) {
+            throw new RuntimeException("Invalid refresh token");
+        }
+
+
+        // 3. Generate new access token
+        UserDetails userDetails = customUserDetailsService.loadUserByUsername(username);
+
+        String newAccessToken = jwtService.generateToken(userDetails);
+
+        return ResponseEntity.ok(new JWTResponse(newAccessToken, refreshToken));
+    }
+
+
+
 }

@@ -1,4 +1,4 @@
-package com.prabhas.ecommerce.models;
+package com.prabhas.ecommerce.beans;
 
 import jakarta.validation.constraints.NotNull;
 import lombok.Getter;
