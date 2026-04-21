@@ -6,6 +6,7 @@ import com.prabhas.ecommerce.beans.RefreshRequest;
 import com.prabhas.ecommerce.repositories.RefreshTokenRepository;
 import com.prabhas.ecommerce.security.service.CustomUserDetailsService;
 import com.prabhas.ecommerce.security.service.JWTService;
+import com.prabhas.ecommerce.service.RefreshTokenService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -28,8 +29,11 @@ public class LoginController {
     @Autowired
     JWTService jwtService;
 
+//    @Autowired
+//    private RefreshTokenRepository tokenRepository;
+
     @Autowired
-    private RefreshTokenRepository tokenRepository;
+    private RefreshTokenService refreshTokenService;
 
     @PostMapping("/api/public/login")
     public ResponseEntity<JWTResponse> login(@RequestBody AuthenticationRequest request) {
@@ -46,6 +50,8 @@ public class LoginController {
         JWTResponse jwtResponse = new JWTResponse();
         jwtResponse.setAccessToken(jwtService.generateToken(userDetails));
         jwtResponse.setRefreshToken(jwtService.generateRefreshToken(userDetails));
+        refreshTokenService.save(jwtResponse.getRefreshToken(), request.getUsername());
+
 
         return ResponseEntity.ok(jwtResponse);
     }
@@ -56,7 +62,7 @@ public class LoginController {
         String refreshToken = request.getRefreshToken();
 
         // delete or mark revoked
-        tokenRepository.deleteByToken(refreshToken);
+        refreshTokenService.deleteByToken(refreshToken);
 
         return ResponseEntity.ok("Logged out successfully");
     }
