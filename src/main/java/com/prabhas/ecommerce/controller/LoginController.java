@@ -3,7 +3,6 @@ package com.prabhas.ecommerce.controller;
 import com.prabhas.ecommerce.beans.AuthenticationRequest;
 import com.prabhas.ecommerce.beans.JWTResponse;
 import com.prabhas.ecommerce.beans.RefreshRequest;
-import com.prabhas.ecommerce.repositories.RefreshTokenRepository;
 import com.prabhas.ecommerce.security.service.CustomUserDetailsService;
 import com.prabhas.ecommerce.security.service.JWTService;
 import com.prabhas.ecommerce.service.RefreshTokenService;
@@ -29,8 +28,6 @@ public class LoginController {
     @Autowired
     JWTService jwtService;
 
-//    @Autowired
-//    private RefreshTokenRepository tokenRepository;
 
     @Autowired
     private RefreshTokenService refreshTokenService;
@@ -86,6 +83,12 @@ public class LoginController {
         String newAccessToken = jwtService.generateToken(userDetails);
 
         return ResponseEntity.ok(new JWTResponse(newAccessToken, refreshToken));
+    }
+
+    @PostMapping("api/public/register")
+    public ResponseEntity<String> register(@RequestBody AuthenticationRequest request) {
+        return ResponseEntity.ok("Registered successfully");
+
     }
 
 
