@@ -3,9 +3,14 @@ package com.prabhas.ecommerce.controller;
 import com.prabhas.ecommerce.beans.AuthenticationRequest;
 import com.prabhas.ecommerce.beans.JWTResponse;
 import com.prabhas.ecommerce.beans.RefreshRequest;
+import com.prabhas.ecommerce.beans.RegistrationRequest;
+import com.prabhas.ecommerce.models.Roles;
+import com.prabhas.ecommerce.models.Users;
 import com.prabhas.ecommerce.security.service.CustomUserDetailsService;
 import com.prabhas.ecommerce.security.service.JWTService;
 import com.prabhas.ecommerce.service.RefreshTokenService;
+import com.prabhas.ecommerce.service.UserService;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
@@ -15,6 +20,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Set;
 
 @RestController
 public class LoginController {
@@ -28,12 +35,15 @@ public class LoginController {
     @Autowired
     JWTService jwtService;
 
+    @Autowired
+    UserService userService;
+
 
     @Autowired
     private RefreshTokenService refreshTokenService;
 
     @PostMapping("/api/public/login")
-    public ResponseEntity<JWTResponse> login(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<JWTResponse> login(@Valid @RequestBody AuthenticationRequest request) {
 
         Authentication authentication = authenticationManager.authenticate(
                 new UsernamePasswordAuthenticationToken(
@@ -86,7 +96,8 @@ public class LoginController {
     }
 
     @PostMapping("api/public/register")
-    public ResponseEntity<String> register(@RequestBody AuthenticationRequest request) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegistrationRequest request) {
+        userService.save(request);
         return ResponseEntity.ok("Registered successfully");
 
     }

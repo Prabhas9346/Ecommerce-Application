@@ -1,12 +1,14 @@
 package com.prabhas.ecommerce.service;
 
+import com.prabhas.ecommerce.beans.RegistrationRequest;
+import com.prabhas.ecommerce.models.Roles;
 import com.prabhas.ecommerce.models.Users;
 import com.prabhas.ecommerce.repositories.UsersRepository;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
+import jakarta.validation.Valid;
 import org.springframework.stereotype.Service;
 
-import javax.swing.text.html.Option;
 import java.util.Optional;
+import java.util.Set;
 
 @Service
 public class UserService {
@@ -22,4 +24,15 @@ public class UserService {
         return user.orElse(null);
     }
 
+    public void save(@Valid RegistrationRequest request) {
+        Users users = new Users();
+        users.setUsername(request.getUserName());
+        users.setPassword(request.getPassword());
+        users.setEmail(request.getEmail());
+        users.setEnabled(true);
+        Roles roles = new Roles("ROLE_USER");
+        users.setRoles(Set.of(roles));
+        users.setAddresses(request.getAddress());
+        usersRepository.save(users);
+    }
 }

@@ -34,6 +34,10 @@ public class Product {
 
     private String imageUrl;
 
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "seller_id", nullable = false)
+    private Users seller;
+
     private boolean isActive;
 
     @CreationTimestamp
