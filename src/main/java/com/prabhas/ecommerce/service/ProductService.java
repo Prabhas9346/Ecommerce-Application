@@ -14,21 +14,21 @@ import org.springframework.stereotype.Service;
 
 import java.util.List;
 import java.util.Map;
-
+/**
+ * Service class for product-related operations including CRUD operations and business logic.
+ * This service handles product creation, retrieval, updates, and deletion with appropriate validations.
+ */
 @Service
 public class ProductService {
+    // Repository for accessing user data
     @Autowired
     UsersRepository usersRepository;
 
+    // Repository for accessing product data
     @Autowired
     ProductRepository productRepository;
 
-    @Autowired
-    OrderItemRepository orderItemRepository;
-
-    @Autowired
-    CartItemRepository cartItemRepository;
-
+    // Repository for accessing category data
     @Autowired
     CategoryRepository categoryRepository;
 
@@ -37,20 +37,28 @@ public class ProductService {
      *
      * @param username The username of the seller whose products are to be retrieved
      * @param pageNo   The page number for pagination (optional)
-     * @param size     The number of items per page for pagination (optional)
+     * @param size     The number of items per page (optional)
      * @return ResponseEntity containing either paginated product data or all products if no pagination parameters provided
      */
     public ResponseEntity<?> getsellerProducts(String username, Integer pageNo, Integer size) {
-        // Check if pagination parameters are provided
+        // Validate username
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().body("Username cannot be null or empty");
+        }
+
+        // Validate pagination parameters if provided
         if (pageNo != null && size != null) {
+            if (pageNo < 0 || size <= 0) {
+                return ResponseEntity.badRequest().body("Invalid pagination parameters");
+            }
             // Retrieve paginated results from the repository
             Page<Product> page = productRepository.findBySeller_username(username, PageRequest.of(pageNo, size));
             // Return paginated response with metadata
             return ResponseEntity.ok(Map.of(
-                    "data", page.getContent(),                // List of products in the current page
-                    "currentPage", page.getNumber(),          // Current page number (0-based)
-                    "totalPages", page.getTotalPages(),      // Total number of pages available
-                    "totalItems", page.getTotalElements()    // Total number of products available
+                    "data", page.getContent(),
+                    "currentPage", page.getNumber(),
+                    "totalPages", page.getTotalPages(),
+                    "totalItems", page.getTotalElements()
             ));
         }
         // If no pagination parameters, retrieve all products for the seller
@@ -68,6 +76,29 @@ public class ProductService {
      * @throws RuntimeException if seller or category is not found
      */
     public ResponseEntity<?> addProduct(ProductCreateRequest request, String username) {
+        // Validate request
+        if (request == null) {
+            return ResponseEntity.badRequest().body("Request cannot be null");
+        }
+
+        // Validate username
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().body("Username cannot be null or empty");
+        }
+
+        // Validate required fields
+        if (request.getName() == null || request.getName().isBlank()) {
+            return ResponseEntity.badRequest().body("Product name is required");
+        }
+        if (request.getPrice() == null || request.getPrice() <= 0) {
+            return ResponseEntity.badRequest().body("Valid price is required");
+        }
+        if (request.getStock() == null || request.getStock() < 0) {
+            return ResponseEntity.badRequest().body("Valid stock quantity is required");
+        }
+        if (request.getCategoryId() == null) {
+            return ResponseEntity.badRequest().body("Category is required");
+        }
 
         // Find the seller by username, throw exception if not found
         Users seller = usersRepository.findByUsername(username)
@@ -114,6 +145,16 @@ public class ProductService {
      * @return ResponseEntity with appropriate status and message based on the operation result
      */
     public ResponseEntity<?> updateProduct(Long id, ProductUpdateRequest request, String username) {
+        // Validate input parameters
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body("Invalid product ID");
+        }
+        if (request == null) {
+            return ResponseEntity.badRequest().body("Request cannot be null");
+        }
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().body("Username cannot be null or empty");
+        }
 
         // Retrieve product from repository by ID, return null if not found
         Product product = productRepository.findById(id).orElse(null);
@@ -175,6 +216,13 @@ public class ProductService {
      * @return ResponseEntity with appropriate status and message
      */
     public ResponseEntity<?> deleteProduct(Long id, String username) {
+        // Validate input parameters
+        if (id == null || id <= 0) {
+            return ResponseEntity.badRequest().body("Invalid product ID");
+        }
+        if (username == null || username.isBlank()) {
+            return ResponseEntity.badRequest().body("Username cannot be null or empty");
+        }
 
         // Find the product by ID, return null if not found
         Product product = productRepository.findById(id).orElse(null);
