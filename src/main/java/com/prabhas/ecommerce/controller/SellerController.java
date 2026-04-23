@@ -1,27 +1,61 @@
 package com.prabhas.ecommerce.controller;
 
+import com.prabhas.ecommerce.beans.ProductCreateRequest;
+import com.prabhas.ecommerce.beans.ProductUpdateRequest;
+import com.prabhas.ecommerce.models.CartItem;
+import com.prabhas.ecommerce.models.Product;
+import com.prabhas.ecommerce.repositories.CartItemRepository;
+import com.prabhas.ecommerce.repositories.ProductRepository;
+import com.prabhas.ecommerce.repositories.UsersRepository;
+import com.prabhas.ecommerce.service.ProductService;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth/seller/")
 public class SellerController {
 
+    @Autowired
+    UsersRepository usersRepository;
+
+    @Autowired
+    ProductRepository productRepository;
+
+    @Autowired
+    CartItemRepository cartItemRepository;
+
+    @Autowired
+    ProductService productService;
+
+
     @GetMapping("get/products")
 
-    public ResponseEntity<?> getSellerProducts(@AuthenticationPrincipal UserDetails userDetails) {
-
+    public ResponseEntity<?> getSellerProducts(@AuthenticationPrincipal UserDetails userDetails, @RequestParam(required = false) Integer pageNo, @RequestParam(required = false) Integer size) {
         String username = userDetails.getUsername();
-
-
-
-        return ResponseEntity.ok(username);
-
-
+        return productService.getsellerProducts(username, pageNo, size);
 
     }
+
+    @PostMapping("add/product")
+    public ResponseEntity<?> addProduct(@RequestBody ProductCreateRequest product, @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        return productService.addProduct(product, username);
+
+    }
+
+    @PutMapping("update/product/{id}")
+    public ResponseEntity<?> updateProduct(@PathVariable Long id, @RequestBody ProductUpdateRequest product, @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        return productService.updateProduct(id, product, username);
+    }
+
+    @DeleteMapping("delete/product/{id}")
+    public ResponseEntity<?> deleteProduct(@PathVariable Long id, @AuthenticationPrincipal UserDetails userDetails) {
+        String username = userDetails.getUsername();
+        return productService.deleteProduct(id, username); }
 }
