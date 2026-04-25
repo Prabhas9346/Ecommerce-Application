@@ -23,4 +23,11 @@ public class AdminController {
         return adminService.approveSeller(id);
 
     }
+
+    @PostMapping("reject-seller/{id}")
+    public ResponseEntity<?> rejectSeller(@PathVariable Long id) {
+        return adminService.rejectSeller(id);
+    }
+
+
 }

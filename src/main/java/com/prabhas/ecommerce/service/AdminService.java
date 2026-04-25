@@ -48,4 +48,27 @@ public class AdminService {
 
         return ResponseEntity.ok("Request Approved");
     }
+
+
+    @Transactional
+    public ResponseEntity<?> rejectSeller(Long id) {
+
+        Users user = usersRepository.findBysellerRequest_id(id)
+                .orElseThrow(() -> new RuntimeException("Request not found"));
+
+        SellerRequest request = user.getSellerRequest();
+
+        if (request == null) {
+            return ResponseEntity.badRequest().body("Seller request not found");
+        }
+
+        if (request.getRequestStatus() != RequestStatus.PENDING) {
+            return ResponseEntity.badRequest()
+                    .body("Request already " + request.getRequestStatus());
+        }
+
+        request.setRequestStatus(RequestStatus.REJECTED);
+
+        return ResponseEntity.ok("Request Rejected");
+    }
 }

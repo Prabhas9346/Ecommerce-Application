@@ -7,6 +7,7 @@ import java.util.Optional;
 
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.prabhas.ecommerce.models.Product;
@@ -29,4 +30,8 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
     ArrayList<Product> findBySeller_username(String username);
 
     Page<Product> findBySeller_username(String username, Pageable pageable);
+
+    Page<Product>findAll(Specification<Product> spec, Pageable pageable);
+
+    List<Product> findAll(Specification<Product> spec);
 }

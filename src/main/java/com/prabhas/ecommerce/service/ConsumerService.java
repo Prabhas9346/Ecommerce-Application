@@ -67,4 +67,7 @@ public class ConsumerService {
         return ResponseEntity.ok("Seller request accepted");
     }
 
+
+
+
 }

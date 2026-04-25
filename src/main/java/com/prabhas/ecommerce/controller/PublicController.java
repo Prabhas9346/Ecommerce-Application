@@ -1,32 +1,26 @@
 package com.prabhas.ecommerce.controller;
 
-import com.prabhas.ecommerce.beans.AuthenticationRequest;
-import com.prabhas.ecommerce.beans.JWTResponse;
-import com.prabhas.ecommerce.beans.RefreshRequest;
-import com.prabhas.ecommerce.beans.RegistrationRequest;
-import com.prabhas.ecommerce.models.Roles;
-import com.prabhas.ecommerce.models.Users;
+import com.prabhas.ecommerce.beans.*;
 import com.prabhas.ecommerce.security.service.CustomUserDetailsService;
 import com.prabhas.ecommerce.security.service.JWTService;
+import com.prabhas.ecommerce.service.ProductService;
 import com.prabhas.ecommerce.service.RefreshTokenService;
 import com.prabhas.ecommerce.service.UserService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RestController;
-
-import java.util.Set;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
-public class LoginController {
+@RequestMapping("/api/public/")
+@Validated
+public class PublicController {
 
     @Autowired
     private CustomUserDetailsService customUserDetailsService;
@@ -40,11 +34,14 @@ public class LoginController {
     @Autowired
     UserService userService;
 
+    @Autowired
+    ProductService productService;
+
 
     @Autowired
     private RefreshTokenService refreshTokenService;
 
-    @PostMapping("/api/public/login")
+    @PostMapping("/login")
     public ResponseEntity<JWTResponse> login(@Valid @RequestBody AuthenticationRequest request) {
 
         Authentication authentication = authenticationManager.authenticate(
@@ -65,7 +62,7 @@ public class LoginController {
         return ResponseEntity.ok(jwtResponse);
     }
 
-    @PostMapping("api/public/logout")
+    @PostMapping("logout")
     public ResponseEntity<String> logout(@RequestBody RefreshRequest request) {
 
         String refreshToken = request.getRefreshToken();
@@ -76,7 +73,7 @@ public class LoginController {
         return ResponseEntity.ok("Logged out successfully");
     }
 
-    @PostMapping("api/public/refresh")
+    @PostMapping("refresh")
     public ResponseEntity<JWTResponse> refresh(@RequestBody RefreshRequest request) {
 
         String refreshToken = request.getRefreshToken();
@@ -97,12 +94,35 @@ public class LoginController {
         return ResponseEntity.ok(new JWTResponse(newAccessToken, refreshToken));
     }
 
-    @PostMapping("api/public/register")
+    @PostMapping("register")
     public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest request) {
       return  userService.save(request);
 //        return ResponseEntity.ok("Registered successfully");
 
     }
+
+    @GetMapping("/get/products")
+    public ResponseEntity<?> getProducts(@RequestParam(required = false) Integer pageNo, @RequestParam(required = false) Integer size) {
+        return productService.getAllProducts(pageNo, size);
+
+    }
+
+    @GetMapping("/get/product/{id}")
+    public ResponseEntity<?> getProductDetails(@PathVariable @Positive(message = "Id must be greater than 0") Long id) {
+        return productService.getProductDetails(id);
+
+    }
+
+    @GetMapping("/get/products/filter")
+    public Object getProducts(
+            ProductFilter filter,
+            @RequestParam(required = false) Integer page,
+            @RequestParam(required = false) Integer size
+    ) {
+        return productService.getProducts(filter, page, size);
+    }
+
+
 
 
 

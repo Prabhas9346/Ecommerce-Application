@@ -1,6 +1,8 @@
 package com.prabhas.ecommerce.service;
 
 import com.prabhas.ecommerce.beans.ProductCreateRequest;
+import com.prabhas.ecommerce.beans.ProductFilter;
+import com.prabhas.ecommerce.beans.ProductResponseDto;
 import com.prabhas.ecommerce.beans.ProductUpdateRequest;
 import com.prabhas.ecommerce.models.Category;
 import com.prabhas.ecommerce.models.Product;
@@ -8,13 +10,18 @@ import com.prabhas.ecommerce.models.Users;
 import com.prabhas.ecommerce.repositories.CategoryRepository;
 import com.prabhas.ecommerce.repositories.ProductRepository;
 import com.prabhas.ecommerce.repositories.UsersRepository;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -298,4 +305,84 @@ public class ProductService {
         // 4. Return product
         return ResponseEntity.ok(product);
     }
+
+    public ResponseEntity<?> getAllProducts(Integer pageNo, Integer size) {
+
+        if (pageNo != null && size != null) {
+            if (pageNo < 0 || size <= 0) {
+                return ResponseEntity.badRequest().body("Invalid pagination parameters");
+            }
+            // Retrieve paginated results from the repository
+            Page<Product> page = productRepository.findAll(PageRequest.of(pageNo, size));
+            // Return paginated response with metadata
+            return ResponseEntity.ok(Map.of(
+                    "data", page.getContent(),
+                    "currentPage", page.getNumber(),
+                    "totalPages", page.getTotalPages(),
+                    "totalItems", page.getTotalElements()
+            ));
+        }
+        // If no pagination parameters, retrieve all products for the seller
+        List<Product> sellerProducts = productRepository.findAll();
+        // Return all products without pagination metadata
+        return ResponseEntity.ok(sellerProducts);
+
+    }
+
+    public ResponseEntity<?> getProductDetails(@Positive(message = "Id must be greater than 0") Long id) {
+
+        Optional<Product> optionalProduct = productRepository.findById(id);
+
+        if (optionalProduct.isEmpty()) {
+            return ResponseEntity.status(404).body("Product not found");
+        }
+
+        Product product = optionalProduct.get();
+
+
+        if (!product.isActive()) {
+            return ResponseEntity.badRequest().body("Product is inactive");
+        }
+
+        return ResponseEntity.ok(product);
+    }
+
+
+    public Object getProducts(ProductFilter filter, Integer page, Integer size) {
+
+        Specification<Product> spec = ProductSpecification.getFilteredProducts(
+                filter.getName(),
+                filter.getMinPrice(),
+                filter.getMaxPrice(),
+                filter.getCategoryId(),
+                filter.getIsActive()
+        );
+
+        // 👉 If pagination params NOT given → return full list
+        if (page == null || size == null) {
+            List<Product> products = productRepository.findAll(spec);
+            return products.stream().map(this::mapToDto).toList();
+        }
+
+        // 👉 Pagination case
+        Pageable pageable = PageRequest.of(page, size, Sort.by("createdAt").descending());
+        Page<Product> productPage = productRepository.findAll(spec, pageable);
+
+        return productPage.map(this::mapToDto);
+    }
+
+    private ProductResponseDto mapToDto(Product product) {
+        ProductResponseDto dto = new ProductResponseDto();
+        dto.setId(product.getId());
+        dto.setName(product.getName());
+        dto.setDescription(product.getDescription());
+        dto.setPrice(product.getPrice());
+        dto.setStock(product.getStock());
+        dto.setImageUrl(product.getImageUrl());
+        dto.setActive(product.isActive());
+        dto.setSellerId(product.getSeller().getId());
+        dto.setCategoryId(product.getCategory().getId());
+        return dto;
+    }
+
 }
