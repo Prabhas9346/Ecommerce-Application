@@ -4,6 +4,7 @@ import java.sql.Timestamp;
 import java.util.List;
 import java.util.Set;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import org.hibernate.annotations.CreationTimestamp;
 
 import jakarta.persistence.*;
@@ -49,5 +50,10 @@ public class Users {
     private Cart cart;
 
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
+    @JsonManagedReference
     private List<Product> products;
+
+    @OneToOne(mappedBy = "consumer", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @JsonIgnore
+    private SellerRequest sellerRequest;
 }

@@ -16,7 +16,9 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -96,11 +98,13 @@ public class LoginController {
     }
 
     @PostMapping("api/public/register")
-    public ResponseEntity<String> register(@Valid @RequestBody RegistrationRequest request) {
-        userService.save(request);
-        return ResponseEntity.ok("Registered successfully");
+    public ResponseEntity<?> register(@Valid @RequestBody RegistrationRequest request) {
+      return  userService.save(request);
+//        return ResponseEntity.ok("Registered successfully");
 
     }
+
+
 
 
 

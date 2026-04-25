@@ -1,5 +1,6 @@
 package com.prabhas.ecommerce.repositories;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 
@@ -25,7 +26,7 @@ public interface ProductRepository extends JpaRepository<Product, Long> {
 
     Optional<Product> findByName(String smartphone);
 
-    List<Product> findBySeller_username(String username);
+    ArrayList<Product> findBySeller_username(String username);
 
     Page<Product> findBySeller_username(String username, Pageable pageable);
 }

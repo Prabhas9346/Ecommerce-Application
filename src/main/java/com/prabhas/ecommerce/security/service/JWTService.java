@@ -35,7 +35,7 @@ public class JWTService {
     private static final long REFRESH_TOKEN_EXPIRATION = 1000 * 60 * 60 * 24;
 
     public String getToken(HttpServletRequest request) {
-        String token = request.getHeaders("Authorization").toString();
+        String token = request.getHeader("Authorization");
         if (token != null && token.startsWith("Bearer ")) {
             return token.substring(7);
         }

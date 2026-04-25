@@ -5,15 +5,19 @@ import com.prabhas.ecommerce.beans.ProductUpdateRequest;
 import com.prabhas.ecommerce.models.Category;
 import com.prabhas.ecommerce.models.Product;
 import com.prabhas.ecommerce.models.Users;
-import com.prabhas.ecommerce.repositories.*;
+import com.prabhas.ecommerce.repositories.CategoryRepository;
+import com.prabhas.ecommerce.repositories.ProductRepository;
+import com.prabhas.ecommerce.repositories.UsersRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 
-import java.util.List;
+import java.util.ArrayList;
 import java.util.Map;
+import java.util.Optional;
+
 /**
  * Service class for product-related operations including CRUD operations and business logic.
  * This service handles product creation, retrieval, updates, and deletion with appropriate validations.
@@ -62,7 +66,7 @@ public class ProductService {
             ));
         }
         // If no pagination parameters, retrieve all products for the seller
-        List<Product> sellerProducts = productRepository.findBySeller_username(username);
+        ArrayList<Product> sellerProducts = productRepository.findBySeller_username(username);
         // Return all products without pagination metadata
         return ResponseEntity.ok(sellerProducts);
     }
@@ -107,6 +111,14 @@ public class ProductService {
         // Find the category by ID, throw exception if not found
         Category category = categoryRepository.findById(request.getCategoryId())
                 .orElseThrow(() -> new RuntimeException("Category not found"));
+
+        Optional<Product> existingProduct = productRepository.findByName(request.getName());
+            if (existingProduct.isPresent()) {
+              Product product=  existingProduct.get();
+              if(product.getSeller().getUsername().equals(username)){
+                  return ResponseEntity.badRequest().body("Product already exists");
+              }
+            }
 
         // Create a new product instance
         Product product = new Product();
@@ -260,5 +272,30 @@ public class ProductService {
 
         // Return success response
         return ResponseEntity.ok("Product deactivated successfully");
+    }
+
+    public ResponseEntity<?> getSellerProduct(Long id, String username) {
+
+        Optional<Product> optionalProduct = productRepository.findById(id);
+
+        // 1. Check if product exists
+        if (optionalProduct.isEmpty()) {
+            return ResponseEntity.status(404).body("Product not found");
+        }
+
+        Product product = optionalProduct.get();
+
+        // 2. Check ownership (authorization)
+        if (!product.getSeller().getUsername().equals(username)) {
+            return ResponseEntity.status(403).body("Not authorized to access this product");
+        }
+
+        // 3. Optional: check if active
+        if (!product.isActive()) {
+            return ResponseEntity.badRequest().body("Product is inactive");
+        }
+
+        // 4. Return product
+        return ResponseEntity.ok(product);
     }
 }
