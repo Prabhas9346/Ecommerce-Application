@@ -31,7 +31,7 @@ public class ConsumerController {
     }
 
     @PostMapping("add-product/{id}")
-    public ResponseEntity<?> addProduct(@AuthenticationPrincipal UserDetails userDetails, @PathVariable @Positive(message = "Id must be greater than 0") Long id, @PathVariable @Positive(message = "quantity must be greater than 0") Integer quantity) {
+    public ResponseEntity<?> addProduct(@AuthenticationPrincipal UserDetails userDetails, @PathVariable @Positive(message = "Id must be greater than 0") Long id, @RequestBody @Positive(message = "quantity must be greater than 0") Integer quantity) {
         String username = userDetails.getUsername();
         return consumerService.addToCart(username, id, quantity);
 

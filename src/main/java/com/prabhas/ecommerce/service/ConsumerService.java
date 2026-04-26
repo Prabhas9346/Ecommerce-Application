@@ -109,7 +109,7 @@ public class ConsumerService {
 
         if (product.getStock() < quantity) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    String.format("Currently only %d units of this product are available", product.getStock()));
+                    String.format("Currently only %f units of this product are available", product.getStock()));
         }
     }
 
