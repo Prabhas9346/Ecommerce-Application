@@ -2,6 +2,7 @@ package com.prabhas.ecommerce.controller;
 
 import com.prabhas.ecommerce.service.ConsumerService;
 import com.prabhas.ecommerce.service.ProductService;
+import jakarta.validation.constraints.Positive;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
@@ -28,6 +29,33 @@ public class ConsumerController {
 
 
     }
+
+    @PostMapping("add-product/{id}")
+    public ResponseEntity<?> addProduct(@AuthenticationPrincipal UserDetails userDetails, @PathVariable @Positive(message = "Id must be greater than 0") Long id, @PathVariable @Positive(message = "quantity must be greater than 0") Integer quantity) {
+        String username = userDetails.getUsername();
+        return consumerService.addToCart(username, id, quantity);
+
+    }
+
+    @PutMapping("/cart/items/{productId}")
+    public ResponseEntity<?> updateCartItem(@PathVariable Long productId, @RequestParam Integer quantity, @AuthenticationPrincipal UserDetails user) {
+        return consumerService.updateCartItem(user.getUsername(), productId, quantity);
+    }
+
+    @DeleteMapping("/cart/items/{productId}")
+    public ResponseEntity<?> removeCartItem(
+            @PathVariable Long productId,
+            @AuthenticationPrincipal UserDetails user
+    ) {
+        return consumerService.removeCartItem(user.getUsername(), productId);
+    }
+
+    @GetMapping("/cart")
+    public ResponseEntity<?> getCart(@AuthenticationPrincipal UserDetails user) {
+        return consumerService.getCart(user.getUsername());
+    }
+
+
 
 
 }
