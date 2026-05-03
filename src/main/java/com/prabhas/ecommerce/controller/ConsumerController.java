@@ -1,5 +1,6 @@
 package com.prabhas.ecommerce.controller;
 
+import com.prabhas.ecommerce.beans.CheckoutRequest;
 import com.prabhas.ecommerce.service.ConsumerService;
 import com.prabhas.ecommerce.service.ProductService;
 import jakarta.validation.constraints.Positive;
@@ -53,6 +54,11 @@ public class ConsumerController {
     @GetMapping("/cart")
     public ResponseEntity<?> getCart(@AuthenticationPrincipal UserDetails user) {
         return consumerService.getCart(user.getUsername());
+    }
+
+    @PostMapping("/cart/checkout")
+    public  ResponseEntity<?> cartCheckout(@AuthenticationPrincipal UserDetails user, @RequestBody CheckoutRequest checkoutRequest) {
+        return consumerService.checkout(user.getUsername(), checkoutRequest);
     }
 
 

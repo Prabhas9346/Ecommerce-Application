@@ -49,6 +49,10 @@ public class Users {
     @JsonIgnore
     private Cart cart;
 
+    @OneToMany(mappedBy = "user")
+    @JsonIgnore
+    private List<Order> orders;
+
     @OneToMany(mappedBy = "seller", cascade = CascadeType.ALL)
     @JsonManagedReference
     private List<Product> products;

@@ -2,6 +2,7 @@ package com.prabhas.ecommerce.service;
 
 import com.prabhas.ecommerce.beans.CartItemDto;
 import com.prabhas.ecommerce.beans.CartResponseDto;
+import com.prabhas.ecommerce.beans.CheckoutRequest;
 import com.prabhas.ecommerce.controller.PublicController;
 import com.prabhas.ecommerce.models.*;
 import com.prabhas.ecommerce.repositories.*;
@@ -33,6 +34,12 @@ public class ConsumerService {
 
     @Autowired
     CartRepository cartRepository;
+
+    @Autowired
+    AddressRepository addressRepository;
+
+    @Autowired
+    OrderRepository orderRepository;
 
 
     @Transactional
@@ -232,7 +239,7 @@ public class ConsumerService {
         Cart cart = dbUser.getCart();
 
         if (cart == null) {
-            return new ResponseEntity<>( new Cart(),HttpStatus.NOT_FOUND);// empty cart
+            return new ResponseEntity<>(new Cart(), HttpStatus.NOT_FOUND);// empty cart
         }
 
         return ResponseEntity.ok(mapToCartDto(cart));
@@ -260,5 +267,71 @@ public class ConsumerService {
         dto.setItems(items);
 
         return dto;
+    }
+
+    @Transactional
+    public ResponseEntity<?> checkout(String username, CheckoutRequest checkoutRequest) {
+
+        Long addressId = checkoutRequest.getAddressId();
+        PaymentMethod paymentMethod = checkoutRequest.getPaymentMethod();
+
+        Users user = usersRepository.findByUsername(username)
+                .orElseThrow(() -> new RuntimeException("User not found"));
+
+        Cart cart = cartRepository.findByUser(user)
+                .orElseThrow(() -> new RuntimeException("Cart not found"));
+
+        if (cart.getCartItems().isEmpty()) {
+            return ResponseEntity.badRequest().body("Cart is empty");
+        }
+
+        Address address = addressRepository.findById(addressId)
+                .orElseThrow(() -> new RuntimeException("Address not found"));
+
+        Order order = new Order();
+        order.setUser(user);
+        order.setUsername(user.getUsername()); // snapshot
+        order.setOrderStatus(OrderStatus.PLACED);
+        order.setPaymentMethod(paymentMethod);
+        order.setShippingAddress(address);
+
+        List<OrderItem> orderItems = new ArrayList<>();
+        double total = 0;
+
+        for (CartItem cartItem : cart.getCartItems()) {
+
+            Product product = cartItem.getProduct();
+
+            // 🔴 Stock validation
+            if (!product.isActive() || product.getStock() < cartItem.getQuantity()) {
+                throw new RuntimeException("Product out of stock: " + product.getName());
+            }
+
+            // Create OrderItem (snapshot)
+            OrderItem orderItem = new OrderItem(
+                    order,
+                    product,
+                    cartItem.getQuantity(),
+                    product.getPrice() // latest price
+            );
+
+            orderItems.add(orderItem);
+
+            total += product.getPrice() * cartItem.getQuantity();
+
+            // 🔥 Reduce stock
+            product.setStock(product.getStock() - cartItem.getQuantity());
+        }
+
+        order.setOrderItems(orderItems);
+        order.setTotalPrice(total);
+
+        orderRepository.save(order);
+
+        // 🔥 Clear cart
+        cart.getCartItems().clear();
+        cart.setTotalPrice(0);
+
+        return ResponseEntity.ok("Order placed successfully");
     }
 }

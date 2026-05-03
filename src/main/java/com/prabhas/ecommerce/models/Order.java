@@ -26,6 +26,8 @@ public class Order {
     @JsonIgnore
     private Users user;
 
+    private String username; // snapshot
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     private List<OrderItem> orderItems = new ArrayList<>();
 
@@ -38,11 +40,20 @@ public class Order {
     @JoinColumn(name = "shipping_address_id", nullable = false)
     private Address shippingAddress;
 
-    private String paymentMethod;
+    private String shippingAddressText;
+
+    @Enumerated(EnumType.STRING)
+    private PaymentMethod paymentMethod;
 
     @CreationTimestamp
     private Timestamp createdAt;
 
     @UpdateTimestamp
     private Timestamp updatedAt;
+
+//    order.setShippingAddressText(
+//            address.getStreet() + ", " +
+//            address.getCity() + ", " +
+//            address.getState()
+//            );
 }

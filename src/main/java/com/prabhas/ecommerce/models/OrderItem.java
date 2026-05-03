@@ -2,6 +2,7 @@ package com.prabhas.ecommerce.models;
 
 import java.sql.Timestamp;
 
+import jakarta.validation.constraints.Min;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -38,7 +39,11 @@ public class OrderItem {
     @JsonIgnore
     private Product product;
 
-    private int quantity = 1;
+    private String productName;
+    private String productImage;
+
+    @Min(1)
+    private int quantity;
 
     private double unitPrice;
 
@@ -53,6 +58,10 @@ public class OrderItem {
         this.product = product;
         this.quantity = quantity;
         this.unitPrice = unitPrice;
+
+        // 🔥 snapshot
+        this.productName = product.getName();
+        this.productImage = product.getImageUrl();
     }
 
 }
