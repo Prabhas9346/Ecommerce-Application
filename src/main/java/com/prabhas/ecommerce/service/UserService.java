@@ -52,12 +52,12 @@ public class UserService {
 
     public ResponseEntity<?> save(@Valid RegistrationRequest request) {
 
-        // 1. check username/email duplicates
-        if (usersRepository.findByUsername(request.getUserName()).isPresent()) {
+        // 1. check username/email duplicates (case-insensitive)
+        if (usersRepository.findByUsernameIgnoreCase(request.getUserName()).isPresent()) {
             return ResponseEntity.badRequest().body("Username already exists. Select some other username");
         }
 
-        if (usersRepository.findByEmail(request.getEmail()).isPresent()) {
+        if (usersRepository.findByEmailIgnoreCase(request.getEmail()).isPresent()) {
             return ResponseEntity.badRequest().body("Email already exists");
         }
 

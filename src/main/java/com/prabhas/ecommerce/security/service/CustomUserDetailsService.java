@@ -22,15 +22,28 @@ public class CustomUserDetailsService implements UserDetailsService {
             throw new UsernameNotFoundException("Identifier cannot be null");
         }
         
+        // Clean up identifier (trim and remove quotes, but let database handle case)
+        String cleanedIdentifier = cleanIdentifier(identifier);
+        
         // Try email first, then fallback to username (both case-insensitive)
-        Users user = userService.fetchByEmail(identifier);
+        Users user = userService.fetchByEmail(cleanedIdentifier);
         if (user == null) {
-            user = userService.fetchByUsername(identifier);
+            user = userService.fetchByUsername(cleanedIdentifier);
         }
         
         if (user != null) {
             return new CustomUserDetails(user);
         }
         throw new UsernameNotFoundException("User not found for email/username: " + identifier);
+    }
+    
+    private String cleanIdentifier(String identifier) {
+        if (identifier == null) return null;
+        
+        // Trim whitespace and remove quotes
+        String cleaned = identifier.trim();
+        cleaned = cleaned.replaceAll("['\"]", ""); // Remove quotes
+        
+        return cleaned;
     }
 }
