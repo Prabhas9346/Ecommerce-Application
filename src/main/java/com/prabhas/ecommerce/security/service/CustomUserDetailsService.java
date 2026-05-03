@@ -16,11 +16,21 @@ public class CustomUserDetailsService implements UserDetailsService {
     private UserService userService;
 
     @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        Users users=userService.fetchByUsername(username);
-        if(users!=null){
-            return new CustomUserDetails(users);
+    public UserDetails loadUserByUsername(String identifier) throws UsernameNotFoundException {
+        // Handle null input
+        if (identifier == null) {
+            throw new UsernameNotFoundException("Identifier cannot be null");
         }
-        throw  new UsernameNotFoundException("User not found for username: " + username);
+        
+        // Try email first, then fallback to username (both case-insensitive)
+        Users user = userService.fetchByEmail(identifier);
+        if (user == null) {
+            user = userService.fetchByUsername(identifier);
+        }
+        
+        if (user != null) {
+            return new CustomUserDetails(user);
+        }
+        throw new UsernameNotFoundException("User not found for email/username: " + identifier);
     }
 }

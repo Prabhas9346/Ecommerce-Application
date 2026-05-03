@@ -28,7 +28,14 @@ public class UserService {
 
 
     public Users fetchByUsername(String username) {
-        Optional<Users>user = usersRepository.findByUsername(username);
+        if (username == null) return null;
+        Optional<Users>user = usersRepository.findByUsernameIgnoreCase(username);
+        return user.orElse(null);
+    }
+    
+    public Users fetchByEmail(String email) {
+        if (email == null) return null;
+        Optional<Users>user = usersRepository.findByEmailIgnoreCase(email);
         return user.orElse(null);
     }
 
