@@ -255,7 +255,7 @@ public class ConsumerService {
         Long addressId = checkoutRequest.getAddressId();
         PaymentMethod paymentMethod = checkoutRequest.getPaymentMethod();
 
-        Users user = usersRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = usersRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         Cart cart = cartRepository.findByUser(user).orElseThrow(() -> new RuntimeException("Cart not found"));
 
@@ -308,9 +308,9 @@ public class ConsumerService {
         return ResponseEntity.ok("Order placed successfully");
     }
 
-    public AddressDto addAddress(AddressDto dto, String userEmail) {
+    public AddressDto addAddress(AddressDto dto, String username) {
 
-        Users user = usersRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = usersRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         Address address = mapToEntity(dto);
         address.setUser(user);
@@ -321,9 +321,9 @@ public class ConsumerService {
     }
 
 
-    public List<AddressDto> getUserAddresses(String userEmail) {
+    public List<AddressDto> getUserAddresses(String username) {
 
-        Users user = usersRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = usersRepository.findByUsernameIgnoreCase(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         return addressRepository.findByUser(user).stream().map(this::mapToDto).collect(Collectors.toList());
     }
