@@ -1,5 +1,6 @@
 package com.prabhas.ecommerce.controller;
 
+import com.prabhas.ecommerce.beans.AddressDto;
 import com.prabhas.ecommerce.beans.CheckoutRequest;
 import com.prabhas.ecommerce.service.ConsumerService;
 import com.prabhas.ecommerce.service.ProductService;
@@ -10,6 +11,8 @@ import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @Validated
@@ -60,6 +63,25 @@ public class ConsumerController {
     public  ResponseEntity<?> cartCheckout(@AuthenticationPrincipal UserDetails user, @RequestBody CheckoutRequest checkoutRequest) {
         return consumerService.checkout(user.getUsername(), checkoutRequest);
     }
+
+
+    @PostMapping
+    public AddressDto addAddress(
+            @RequestBody AddressDto addressDto,
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return consumerService.addAddress(addressDto, userDetails.getUsername());
+    }
+
+    // ✅ Get Logged-in User Addresses
+    @GetMapping
+    public List<AddressDto> getAddresses(
+            @AuthenticationPrincipal UserDetails userDetails) {
+
+        return consumerService.getUserAddresses(userDetails.getUsername());
+    }
+
+
 
 
 

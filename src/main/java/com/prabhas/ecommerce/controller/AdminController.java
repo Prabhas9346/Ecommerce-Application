@@ -1,13 +1,13 @@
 package com.prabhas.ecommerce.controller;
 
+import com.prabhas.ecommerce.models.SellerRequest;
 import com.prabhas.ecommerce.service.AdminService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController
 @RequestMapping("/api/auth/admin/")
@@ -27,6 +27,11 @@ public class AdminController {
     @PostMapping("reject-seller/{id}")
     public ResponseEntity<?> rejectSeller(@PathVariable Long id) {
         return adminService.rejectSeller(id);
+    }
+
+    @GetMapping("get-seller/request")
+    public ResponseEntity<?> getSellerRequest() {
+        return adminService.getSellerRequest();
     }
 
 

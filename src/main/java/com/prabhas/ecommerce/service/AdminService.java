@@ -5,11 +5,14 @@ import com.prabhas.ecommerce.models.Roles;
 import com.prabhas.ecommerce.models.SellerRequest;
 import com.prabhas.ecommerce.models.Users;
 import com.prabhas.ecommerce.repositories.RolesRepository;
+import com.prabhas.ecommerce.repositories.SellerRequestRepository;
 import com.prabhas.ecommerce.repositories.UsersRepository;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 
 @Service
@@ -20,6 +23,9 @@ public class AdminService {
 
     @Autowired
     RolesRepository rolesRepository;
+
+    @Autowired
+    SellerRequestRepository sellerRequestRepository;
 
 
     @Transactional
@@ -70,5 +76,10 @@ public class AdminService {
         request.setRequestStatus(RequestStatus.REJECTED);
 
         return ResponseEntity.ok("Request Rejected");
+    }
+
+    public ResponseEntity<?> getSellerRequest() {
+        List<SellerRequest> sellerRequests=sellerRequestRepository.findAll();
+        return ResponseEntity.ok(sellerRequests);
     }
 }

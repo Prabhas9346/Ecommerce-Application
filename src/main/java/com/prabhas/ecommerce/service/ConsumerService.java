@@ -1,5 +1,6 @@
 package com.prabhas.ecommerce.service;
 
+import com.prabhas.ecommerce.beans.AddressDto;
 import com.prabhas.ecommerce.beans.CartItemDto;
 import com.prabhas.ecommerce.beans.CartResponseDto;
 import com.prabhas.ecommerce.beans.CheckoutRequest;
@@ -15,6 +16,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ConsumerService {
@@ -49,11 +51,9 @@ public class ConsumerService {
             return ResponseEntity.badRequest().body("Username cannot be null or empty");
         }
 
-        Users user = usersRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = usersRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-        Roles sellerRole = rolesRepository.findByName("ROLE_SELLER")
-                .orElseThrow(() -> new RuntimeException("Role not found"));
+        Roles sellerRole = rolesRepository.findByName("ROLE_SELLER").orElseThrow(() -> new RuntimeException("Role not found"));
 
         // Already seller
         if (user.getRoles().contains(sellerRole)) {
@@ -88,13 +88,11 @@ public class ConsumerService {
     @Transactional
     public ResponseEntity<?> addToCart(String username, Long productId, Integer quantity) {
 
-        Product product = productRepository.findById(productId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
+        Product product = productRepository.findById(productId).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Product not found"));
 
         validateProductAvailability(product, quantity);
 
-        Users user = usersRepository.findByUsername(username)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
+        Users user = usersRepository.findByUsername(username).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "User not found"));
 
         Cart cart = user.getCart();
         if (cart == null) {
@@ -117,8 +115,7 @@ public class ConsumerService {
         }
 
         if (product.getStock() < quantity) {
-            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                    String.format("Currently only %f units of this product are available", product.getStock()));
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, String.format("Currently only %f units of this product are available", product.getStock()));
         }
     }
 
@@ -133,17 +130,12 @@ public class ConsumerService {
 
     private void updateCartItem(Cart cart, Product product, Integer quantity) {
 
-        CartItem cartItem = cart.getCartItems().stream()
-                .filter(item -> item.getProduct().getId().equals(product.getId()))
-                .findFirst()
-                .orElseGet(() -> createNewCartItem(cart, product));
+        CartItem cartItem = cart.getCartItems().stream().filter(item -> item.getProduct().getId().equals(product.getId())).findFirst().orElseGet(() -> createNewCartItem(cart, product));
 
         cartItem.setQuantity(cartItem.getQuantity() + quantity);
 
         // Recalculate total price (correct way)
-        double total = cart.getCartItems().stream()
-                .mapToDouble(item -> item.getUnitPrice() * item.getQuantity())
-                .sum();
+        double total = cart.getCartItems().stream().mapToDouble(item -> item.getUnitPrice() * item.getQuantity()).sum();
 
         cart.setTotalPrice(total);
     }
@@ -166,25 +158,20 @@ public class ConsumerService {
             return ResponseEntity.badRequest().body("Quantity must be greater than 0");
         }
 
-        Users user = usersRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = usersRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         Cart cart = user.getCart();
         if (cart == null) {
             return ResponseEntity.badRequest().body("Cart is empty");
         }
 
-        CartItem cartItem = cart.getCartItems().stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Item not found in cart"));
+        CartItem cartItem = cart.getCartItems().stream().filter(item -> item.getProduct().getId().equals(productId)).findFirst().orElseThrow(() -> new RuntimeException("Item not found in cart"));
 
         Product product = cartItem.getProduct();
 
         // optional stock validation
         if (product.getStock() < quantity) {
-            return ResponseEntity.badRequest()
-                    .body("Only " + product.getStock() + " units available");
+            return ResponseEntity.badRequest().body("Only " + product.getStock() + " units available");
         }
 
         cartItem.setQuantity(quantity);
@@ -198,18 +185,14 @@ public class ConsumerService {
     @Transactional
     public ResponseEntity<?> removeCartItem(String username, Long productId) {
 
-        Users user = usersRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = usersRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         Cart cart = user.getCart();
         if (cart == null || cart.getCartItems().isEmpty()) {
             return ResponseEntity.badRequest().body("Cart is empty");
         }
 
-        CartItem cartItem = cart.getCartItems().stream()
-                .filter(item -> item.getProduct().getId().equals(productId))
-                .findFirst()
-                .orElseThrow(() -> new RuntimeException("Item not found in cart"));
+        CartItem cartItem = cart.getCartItems().stream().filter(item -> item.getProduct().getId().equals(productId)).findFirst().orElseThrow(() -> new RuntimeException("Item not found in cart"));
 
         // ✅ remove from collection
         cart.getCartItems().remove(cartItem);
@@ -223,9 +206,7 @@ public class ConsumerService {
     }
 
     private void recalculateCartTotal(Cart cart) {
-        double total = cart.getCartItems().stream()
-                .mapToDouble(item -> item.getUnitPrice() * item.getQuantity())
-                .sum();
+        double total = cart.getCartItems().stream().mapToDouble(item -> item.getUnitPrice() * item.getQuantity()).sum();
 
         cart.setTotalPrice(total);
     }
@@ -233,8 +214,7 @@ public class ConsumerService {
 
     public ResponseEntity<?> getCart(String username) {
 
-        Users dbUser = usersRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Users dbUser = usersRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
         Cart cart = dbUser.getCart();
 
@@ -275,18 +255,15 @@ public class ConsumerService {
         Long addressId = checkoutRequest.getAddressId();
         PaymentMethod paymentMethod = checkoutRequest.getPaymentMethod();
 
-        Users user = usersRepository.findByUsername(username)
-                .orElseThrow(() -> new RuntimeException("User not found"));
+        Users user = usersRepository.findByUsername(username).orElseThrow(() -> new RuntimeException("User not found"));
 
-        Cart cart = cartRepository.findByUser(user)
-                .orElseThrow(() -> new RuntimeException("Cart not found"));
+        Cart cart = cartRepository.findByUser(user).orElseThrow(() -> new RuntimeException("Cart not found"));
 
         if (cart.getCartItems().isEmpty()) {
             return ResponseEntity.badRequest().body("Cart is empty");
         }
 
-        Address address = addressRepository.findById(addressId)
-                .orElseThrow(() -> new RuntimeException("Address not found"));
+        Address address = addressRepository.findById(addressId).orElseThrow(() -> new RuntimeException("Address not found"));
 
         Order order = new Order();
         order.setUser(user);
@@ -308,11 +285,7 @@ public class ConsumerService {
             }
 
             // Create OrderItem (snapshot)
-            OrderItem orderItem = new OrderItem(
-                    order,
-                    product,
-                    cartItem.getQuantity(),
-                    product.getPrice() // latest price
+            OrderItem orderItem = new OrderItem(order, product, cartItem.getQuantity(), product.getPrice() // latest price
             );
 
             orderItems.add(orderItem);
@@ -333,5 +306,51 @@ public class ConsumerService {
         cart.setTotalPrice(0);
 
         return ResponseEntity.ok("Order placed successfully");
+    }
+
+    public AddressDto addAddress(AddressDto dto, String userEmail) {
+
+        Users user = usersRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+
+        Address address = mapToEntity(dto);
+        address.setUser(user);
+
+        Address saved = addressRepository.save(address);
+
+        return mapToDto(saved);
+    }
+
+
+    public List<AddressDto> getUserAddresses(String userEmail) {
+
+        Users user = usersRepository.findByEmail(userEmail).orElseThrow(() -> new RuntimeException("User not found"));
+
+        return addressRepository.findByUser(user).stream().map(this::mapToDto).collect(Collectors.toList());
+    }
+
+    // 🔹 Mapping Methods
+    private Address mapToEntity(AddressDto dto) {
+        Address address = new Address();
+        address.setStreet(dto.getStreet());
+        address.setCity(dto.getCity());
+        address.setState(dto.getState());
+        address.setZipCode(dto.getZipCode());
+        address.setCountry(dto.getCountry());
+        address.setType(dto.getType());
+        address.setDefault(dto.isDefault());
+        return address;
+    }
+
+    private AddressDto mapToDto(Address address) {
+        AddressDto dto = new AddressDto();
+        dto.setId(address.getId());
+        dto.setStreet(address.getStreet());
+        dto.setCity(address.getCity());
+        dto.setState(address.getState());
+        dto.setZipCode(address.getZipCode());
+        dto.setCountry(address.getCountry());
+        dto.setType(address.getType());
+        dto.setDefault(address.isDefault());
+        return dto;
     }
 }
