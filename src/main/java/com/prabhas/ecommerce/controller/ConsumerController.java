@@ -65,7 +65,7 @@ public class ConsumerController {
     }
 
 
-    @PostMapping
+    @PostMapping("add-address")
     public AddressDto addAddress(
             @RequestBody AddressDto addressDto,
             @AuthenticationPrincipal UserDetails userDetails) {
@@ -74,7 +74,7 @@ public class ConsumerController {
     }
 
     // ✅ Get Logged-in User Addresses
-    @GetMapping
+    @GetMapping("address-detail")
     public List<AddressDto> getAddresses(
             @AuthenticationPrincipal UserDetails userDetails) {
 
