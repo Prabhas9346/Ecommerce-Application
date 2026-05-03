@@ -1,9 +1,12 @@
 package com.prabhas.ecommerce.security.config;
 
 
-
 import com.prabhas.ecommerce.security.filter.JWTFilter;
 import com.prabhas.ecommerce.security.service.CustomUserDetailsService;
+import io.swagger.v3.oas.models.Components;
+import io.swagger.v3.oas.models.OpenAPI;
+import io.swagger.v3.oas.models.security.SecurityRequirement;
+import io.swagger.v3.oas.models.security.SecurityScheme;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -39,6 +42,10 @@ public class SecuirtyConfig {
                 .requestMatchers("/api/auth/admin/**").hasRole("ADMIN")
                 .requestMatchers("/api/auth/seller/**").hasRole("SELLER")
                 .requestMatchers("/api/auth/consumer/**").hasRole("CONSUMER")
+                .requestMatchers(
+                        "/v3/api-docs/**",
+                        "/swagger-ui/**"
+                ).permitAll()
                 .anyRequest().authenticated()
         );
 
@@ -58,7 +65,7 @@ public class SecuirtyConfig {
 
 
     @Bean
-    public AuthenticationManager authenticationManager( AuthenticationConfiguration  config) throws Exception {
+    public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
 
         return config.getAuthenticationManager();
     }
@@ -67,17 +74,32 @@ public class SecuirtyConfig {
     public AuthenticationProvider authenticationProvider() {
 
 
-        DaoAuthenticationProvider provider = new DaoAuthenticationProvider(customUserDetailsService);
+        DaoAuthenticationProvider provider = new DaoAuthenticationProvider();
+        provider.setUserDetailsService(customUserDetailsService);
+        provider.setPasswordEncoder(passwordEncoder());
 
-        provider.setPasswordEncoder( passwordEncoder());
-        
         return provider;
-        
+
     }
 
     @Bean
-     PasswordEncoder passwordEncoder() {
+    PasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
+    }
+
+    @Bean
+    public OpenAPI customOpenAPISwaggerConfig() {
+        return new OpenAPI()
+                .addSecurityItem(new SecurityRequirement().addList("bearerAuth"))
+                .components(new Components()
+                        .addSecuritySchemes("bearerAuth",
+                                new SecurityScheme()
+                                        .name("Authorization")
+                                        .type(SecurityScheme.Type.HTTP)
+                                        .scheme("bearer")
+                                        .bearerFormat("JWT")
+                        )
+                );
     }
 
 

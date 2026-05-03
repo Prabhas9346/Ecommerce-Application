@@ -2,6 +2,7 @@ package com.prabhas.ecommerce.service;
 
 import com.prabhas.ecommerce.beans.CartItemDto;
 import com.prabhas.ecommerce.beans.CartResponseDto;
+import com.prabhas.ecommerce.controller.PublicController;
 import com.prabhas.ecommerce.models.*;
 import com.prabhas.ecommerce.repositories.*;
 import jakarta.transaction.Transactional;
@@ -32,6 +33,7 @@ public class ConsumerService {
 
     @Autowired
     CartRepository cartRepository;
+
 
     @Transactional
     public ResponseEntity<?> requestSeller(String username) {
